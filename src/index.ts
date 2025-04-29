@@ -64,7 +64,7 @@ client.on('interactionCreate', async interaction => {
     const command = client.commands.get(interaction.commandName);
     if (!command) return;
 
-    if (!config.whitelist.includes(interaction.user.id)) {
+    if (config.isWhitelistEnabled && !config.whitelist.includes(interaction.user.id)) {
         await interaction.reply({ content: '❌ Tu n\'es pas autorisé à utiliser ce bot.', ephemeral: true });
         return;
     }
