@@ -21,7 +21,6 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
 
     try {
         const res = await status(SERVER_IP, SERVER_PORT);
-        console.log(res);
         const players = res.players.online;
         const successEmbed = new EmbedBuilder()
             .setTitle("Statut du serveur Minecraft")

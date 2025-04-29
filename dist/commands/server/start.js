@@ -18,13 +18,14 @@ const execute = async (interaction) => {
         .setFooter({ text: config_1.default.embed.footer });
     await interaction.reply({ embeds: [embed] });
     try {
-        await (0, ec2_1.startInstance)().then(() => {
+        await (0, ec2_1.startInstance)().then(async () => {
+            await new Promise(resolve => setTimeout(resolve, 30000));
             const successEmbed = new discord_js_1.EmbedBuilder()
                 .setTitle("Instance EC2 démarrée")
                 .setColor(config_1.default.color.success)
                 .setDescription('L\'instance EC2 a été démarrée avec succès.')
                 .setFooter({ text: config_1.default.embed.footer });
-            interaction.editReply({
+            await interaction.editReply({
                 embeds: [successEmbed]
             });
         });

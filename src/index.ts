@@ -40,6 +40,7 @@ const monitorPlayers = () => {
                     shutdownTimer = null;
                 }
             } else {
+                console.log(`Stopping instance in ${TIMEOUT / 1000 / 60} minutes...`);
                 if (!shutdownTimer && Date.now() - lastPlayersConnected > TIMEOUT) {
                     console.log('No players for 10 min, stopping instance...');
                     await stopInstance();
@@ -62,6 +63,11 @@ client.on('interactionCreate', async interaction => {
     // @ts-ignore
     const command = client.commands.get(interaction.commandName);
     if (!command) return;
+
+    if (!config.whitelist.includes(interaction.user.id)) {
+        await interaction.reply({ content: '❌ Tu n\'es pas autorisé à utiliser ce bot.', ephemeral: true });
+        return;
+    }
 
     try {
         await command.execute(interaction);

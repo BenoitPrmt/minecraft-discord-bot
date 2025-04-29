@@ -64,6 +64,7 @@ const monitorPlayers = () => {
             console.log("Pinging Minecraft server...");
             const res = await (0, minecraft_server_util_1.status)(SERVER_IP, SERVER_PORT);
             const players = res.players.online;
+            console.log(` ${players} players connected`);
             if (players > 0) {
                 lastPlayersConnected = Date.now();
                 if (shutdownTimer) {
@@ -72,6 +73,7 @@ const monitorPlayers = () => {
                 }
             }
             else {
+                console.log(`Stopping instance in ${TIMEOUT / 1000} seconds...`);
                 if (!shutdownTimer && Date.now() - lastPlayersConnected > TIMEOUT) {
                     console.log('No players for 10 min, stopping instance...');
                     await (0, ec2_1.stopInstance)();
@@ -94,6 +96,10 @@ client.on('interactionCreate', async (interaction) => {
     const command = client.commands.get(interaction.commandName);
     if (!command)
         return;
+    if (!config_1.default.whitelist.includes(interaction.user.id)) {
+        await interaction.reply({ content: '❌ Tu n\'es pas autorisé à utiliser ce bot.', ephemeral: true });
+        return;
+    }
     try {
         await command.execute(interaction);
     }
