@@ -35,6 +35,7 @@ const stopInstance = async () => {
 const monitorPlayers = () => {
     setInterval(async () => {
         try {
+            console.log("Pinging Minecraft server...");
             const res = await status(SERVER_IP, SERVER_PORT);
             const players = res.players.online;
             if (players > 0) {
@@ -64,11 +65,37 @@ client.on('interactionCreate', async interaction => {
     if (!interaction.isChatInputCommand()) return;
     if (interaction.commandName === 'start') {
         await interaction.reply('Démarrage de l\'instance EC2...');
-        await startInstance();
+        await startInstance().then(() => {
+            interaction.followUp('Instance démarrée.');
+        });
+    } else if (interaction.commandName === 'stop') {
+        await interaction.reply('Arrêt de l\'instance EC2...');
+        await stopInstance().then(() => {
+            interaction.followUp('Instance arrêtée.');
+        })
+    } else if (interaction.commandName === 'status') {
+        await interaction.reply('Vérification du statut du serveur Minecraft...');
+        try {
+            const res = await status(SERVER_IP, SERVER_PORT);
+            const players = res.players.online;
+            interaction.followUp(`Le serveur est en ligne avec ${players} joueur(s) connecté(s).`);
+        } catch (err) {
+            interaction.followUp('Le serveur est hors ligne.');
+        }
     }
 });
 
-const commands = [new SlashCommandBuilder().setName('start').setDescription('Démarre le serveur Minecraft')].map(cmd => cmd.toJSON());
+const commands = [
+    new SlashCommandBuilder()
+        .setName('start')
+        .setDescription('Démarre le serveur Minecraft'),
+    new SlashCommandBuilder()
+        .setName('stop')
+        .setDescription('Arrête le serveur Minecraft'),
+    new SlashCommandBuilder()
+        .setName('status')
+        .setDescription('Vérifie le statut du serveur Minecraft'),
+].map(cmd => cmd.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN!);
 

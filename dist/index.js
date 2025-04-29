@@ -42,7 +42,6 @@ const discord_js_1 = require("discord.js");
 const minecraft_server_util_1 = require("minecraft-server-util");
 const aws_sdk_2 = __importDefault(require("aws-sdk"));
 dotenv.config();
-// Configurer AWS SDK avec les variables d'environnement
 aws_sdk_2.default.config.update({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -57,17 +56,16 @@ const TIMEOUT = 10 * 60 * 1000;
 let lastPlayersConnected = Date.now();
 let shutdownTimer = null;
 const client = new discord_js_1.Client({ intents: [discord_js_1.GatewayIntentBits.Guilds] });
-// Fonction de démarrage et arrêt de l'instance EC2
 const startInstance = async () => {
     await ec2.startInstances({ InstanceIds: [INSTANCE_ID] }).promise();
 };
 const stopInstance = async () => {
     await ec2.stopInstances({ InstanceIds: [INSTANCE_ID] }).promise();
 };
-// Surveille les joueurs connectés au serveur Minecraft
 const monitorPlayers = () => {
     setInterval(async () => {
         try {
+            console.log("Pinging Minecraft server...");
             const res = await (0, minecraft_server_util_1.status)(SERVER_IP, SERVER_PORT);
             const players = res.players.online;
             if (players > 0) {
@@ -98,11 +96,39 @@ client.on('interactionCreate', async (interaction) => {
         return;
     if (interaction.commandName === 'start') {
         await interaction.reply('Démarrage de l\'instance EC2...');
-        await startInstance();
+        await startInstance().then(() => {
+            interaction.followUp('Instance démarrée.');
+        });
+    }
+    else if (interaction.commandName === 'stop') {
+        await interaction.reply('Arrêt de l\'instance EC2...');
+        await stopInstance().then(() => {
+            interaction.followUp('Instance arrêtée.');
+        });
+    }
+    else if (interaction.commandName === 'status') {
+        await interaction.reply('Vérification du statut du serveur Minecraft...');
+        try {
+            const res = await (0, minecraft_server_util_1.status)(SERVER_IP, SERVER_PORT);
+            const players = res.players.online;
+            interaction.followUp(`Le serveur est en ligne avec ${players} joueur(s) connecté(s).`);
+        }
+        catch (err) {
+            interaction.followUp('Le serveur est hors ligne.');
+        }
     }
 });
-// Crée et enregistre la commande `/start`
-const commands = [new discord_js_1.SlashCommandBuilder().setName('start').setDescription('Démarre le serveur Minecraft')].map(cmd => cmd.toJSON());
+const commands = [
+    new discord_js_1.SlashCommandBuilder()
+        .setName('start')
+        .setDescription('Démarre le serveur Minecraft'),
+    new discord_js_1.SlashCommandBuilder()
+        .setName('stop')
+        .setDescription('Arrête le serveur Minecraft'),
+    new discord_js_1.SlashCommandBuilder()
+        .setName('status')
+        .setDescription('Vérifie le statut du serveur Minecraft'),
+].map(cmd => cmd.toJSON());
 const rest = new discord_js_1.REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 (async () => {
     try {
