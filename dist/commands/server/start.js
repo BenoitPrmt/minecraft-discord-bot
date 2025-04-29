@@ -1,0 +1,43 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.execute = exports.data = void 0;
+const discord_js_1 = require("discord.js");
+const ec2_1 = require("../../helpers/ec2");
+const config_1 = __importDefault(require("../../config"));
+exports.data = new discord_js_1.SlashCommandBuilder()
+    .setName('start')
+    .setDescription('Démarre le serveur Minecraft');
+const execute = async (interaction) => {
+    const embed = new discord_js_1.EmbedBuilder()
+        .setTitle("Démarrage de l'instance EC2")
+        .setColor(config_1.default.color.default)
+        .setDescription('Démarrage de l\'instance EC2 en cours...')
+        .setFooter({ text: config_1.default.embed.footer });
+    await interaction.reply({ embeds: [embed] });
+    try {
+        await (0, ec2_1.startInstance)().then(() => {
+            const successEmbed = new discord_js_1.EmbedBuilder()
+                .setTitle("Instance EC2 démarrée")
+                .setColor(config_1.default.color.success)
+                .setDescription('L\'instance EC2 a été démarrée avec succès.')
+                .setFooter({ text: config_1.default.embed.footer });
+            interaction.editReply({
+                embeds: [successEmbed]
+            });
+        });
+    }
+    catch (err) {
+        const errorEmbed = new discord_js_1.EmbedBuilder()
+            .setTitle("Erreur lors du démarrage de l'instance EC2")
+            .setColor(config_1.default.color.error)
+            .setDescription('Une erreur est survenue lors du démarrage de l\'instance EC2, réessayez plus tard.')
+            .setFooter({ text: config_1.default.embed.footer });
+        await interaction.editReply({
+            embeds: [errorEmbed]
+        });
+    }
+};
+exports.execute = execute;

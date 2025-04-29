@@ -5,7 +5,7 @@
   "author": "BenoitPrmt",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "ts-node src/index.ts",
+    "dev": "ts-node src/index-old.ts",
     "build": "tsc",
     "start": "node dist/index.js"
   },
