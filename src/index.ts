@@ -1,10 +1,10 @@
 import { Client, GatewayIntentBits, Collection } from 'discord.js';
 import { loadCommands } from './utils/loadCommands';
 import config from './config';
-import {status} from "minecraft-server-util";
 import * as dotenv from "dotenv";
 import AWS from "aws-sdk";
-import {stopInstance} from "./helpers/ec2";
+import {monitorPlayers} from "./helpers/monitoring";
+import {initDB} from "./helpers/db";
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 // @ts-ignore
@@ -18,42 +18,12 @@ AWS.config.update({
     region: process.env.AWS_REGION!,
 });
 
-const SERVER_IP = process.env.AWS_IP_ADDRESS!;
-const SERVER_PORT = 25565;
-const CHECK_INTERVAL = 60 * 1000;
-const TIMEOUT = 10 * 60 * 1000;
-
-let lastPlayersConnected = Date.now();
-let shutdownTimer: NodeJS.Timeout | null = null;
-
-const monitorPlayers = () => {
-    setInterval(async () => {
-        try {
-            console.log("Pinging Minecraft server...");
-            const res = await status(SERVER_IP, SERVER_PORT);
-            const players = res.players.online;
-            console.log(` ${players} players connected`);
-            if (players > 0) {
-                lastPlayersConnected = Date.now();
-                if (shutdownTimer) {
-                    clearTimeout(shutdownTimer);
-                    shutdownTimer = null;
-                }
-            } else {
-                console.log(`Stopping instance in ${TIMEOUT / 1000 / 60} minutes...`);
-                if (!shutdownTimer && Date.now() - lastPlayersConnected > TIMEOUT) {
-                    console.log('No players for 10 min, stopping instance...');
-                    await stopInstance();
-                }
-            }
-        } catch (err) {
-            console.error('Erreur de ping Minecraft :', err);
-        }
-    }, CHECK_INTERVAL);
-};
 
 client.once('ready', () => {
     console.log(`✅ Connecté en tant que ${client.user?.tag}`);
+    initDB().then(r => {
+        console.log("DB initialized");
+    });
     monitorPlayers();
 });
 
@@ -78,4 +48,4 @@ client.on('interactionCreate', async interaction => {
 });
 
 loadCommands(client);
-client.login(config.discordToken);
+client.login(process.env.DISCORD_TOKEN!);
