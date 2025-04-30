@@ -16,9 +16,6 @@ export const loadCommands = async (client: Client) => {
         const folderPath = path.join(commandsPath, folder);
         const files = fs.readdirSync(folderPath).filter(file => file.endsWith('.ts') || file.endsWith('.js'));
 
-        console.log(`[COMMAND] Chargement des commandes dans le dossier ${folderPath}`);
-        console.log("[COMMAND] Fichiers trouvés :", files);
-
         for (const file of files) {
             const filePath = path.join(folderPath, file);
             const command = await import(filePath);
@@ -35,10 +32,15 @@ export const loadCommands = async (client: Client) => {
     const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN!);
 
     try {
-        // await rest.put(Routes.applicationCommands(process.env.DISCORD_BOT_ID!), { body: commands });
-        await rest.put(Routes.applicationGuildCommands(process.env.DISCORD_BOT_ID!, "689895625508257874"), { body: commands });
-        console.log('✔️  Toutes les commandes ont été enregistrées');
+        if (process.env.DEBUG === 'true' && process.env.DEV_GUILD_ID) {
+            console.log("[DEBUG] Enregistrement des commandes dans le serveur de développement");
+            await rest.put(Routes.applicationGuildCommands(process.env.DISCORD_BOT_ID!, process.env.DEV_GUILD_ID), { body: commands });
+        } else {
+            console.log("[PROD] Enregistrement des commandes globalement");
+            await rest.put(Routes.applicationCommands(process.env.DISCORD_BOT_ID!), { body: commands });
+        }
+        console.log('[COMMANDS] Toutes les commandes ont été enregistrées');
     } catch (err) {
-        console.error('❌ Erreur d’enregistrement des commandes:', err);
+        console.error('[ERROR] Erreur d’enregistrement des commandes:', err);
     }
 };

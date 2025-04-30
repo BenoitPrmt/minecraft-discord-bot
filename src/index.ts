@@ -20,9 +20,9 @@ AWS.config.update({
 
 
 client.once('ready', () => {
-    console.log(`✅ Connecté en tant que ${client.user?.tag}`);
+    console.log(`[DISCORD] Connecté en tant que ${client.user?.tag}`);
     initDB().then(r => {
-        console.log("DB initialized");
+        console.log("[DATABASE] Base de données initialisée");
     });
     monitorPlayers();
 });
