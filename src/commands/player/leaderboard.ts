@@ -16,12 +16,12 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
             .setFooter({ text: config.embed.footer });
 
         const players: DbPlayer[] = await playerTable.all();
+        const playersSorted = players.sort((a, b) => b.value.playtime - a.value.playtime);
 
-        const leaderboardData = players.map((player: DbPlayer, index: number) => {
+        const leaderboardData = playersSorted.map((player: DbPlayer, index: number) => {
             return {
                 name: `${LeaderboardHelper.displayLeaderboardRank(index + 1)} - ${player.value.username}`,
-                value: `${LeaderboardHelper.displayPlaytime(player.value.playtime)} de jeu`,
-                inline: true
+                value: `${LeaderboardHelper.displayPlaytime(player.value.playtime)} de jeu`
             }
         })
 
